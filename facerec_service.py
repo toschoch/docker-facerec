@@ -24,7 +24,7 @@ def load_image(fname):
     return np.array(Image.open(fname))
 
 
-facedb.set_db_path(os.path.join(os.path.split(__file__)[0],'faces'))
+facedb.set_db_path(os.path.join(os.path.split(__file__)[0],'data'))
 dlib_api.teach_person(load_image(r"D:\Users\TOS\Pictures\Camera Roll\WIN_20180412_14_00_21_Pro.jpg"),name='Tobias Schoch')
 dlib_api.teach_person(load_image(r"D:\Users\TOS\Pictures\Camera Roll\WIN_20180412_14_00_22_Pro.jpg"),name='Tobias Schoch')
 
@@ -85,21 +85,21 @@ def web_faces():
     # GET
     if request.method == 'GET':
         return jsonify(list(map(person_to_dict,facedb.persons())))
-    else:
-        # POST/DELETE
-        if 'id' not in request.args:
-            raise BadRequest("Identifier for the face was not given!")
-
-        if request.method == 'POST':
-            file = extract_image(request)
-            try:
-                new_encoding = calc_face_encoding(file)
-                faces_dict.update({request.args.get('id'): new_encoding})
-            except Exception as exception:
-                raise BadRequest(exception)
-
-        elif request.method == 'DELETE':
-            faces_dict.pop(request.args.get('id'))
+    # else:
+    #     # POST/DELETE
+    #     if 'id' not in request.args:
+    #         raise BadRequest("Identifier for the face was not given!")
+    #
+    #     if request.method == 'POST':
+    #         file = extract_image(request)
+    #         try:
+    #             new_encoding = calc_face_encoding(file)
+    #             faces_dict.update({request.args.get('id'): new_encoding})
+    #         except Exception as exception:
+    #             raise BadRequest(exception)
+    #
+    #     elif request.method == 'DELETE':
+    #         faces_dict.pop(request.args.get('id'))
 
 
 
