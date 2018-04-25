@@ -2,6 +2,7 @@ import os
 from os import listdir
 from os.path import isfile, join, splitext
 
+import tempfile
 from facerec import facedb, dlib_api
 from PIL import Image
 import numpy as np
@@ -51,12 +52,14 @@ def person_to_dict(p, attributes=['id','name','nmeans','code']):
 class IdentifyForm(Form):
     file = TextField('File:', validators=[validators.required()])
 
-@app.route("/", methods=['GET', 'POST'])
+@app.route("/identify", methods=['GET', 'POST'])
 def web_identify():
     form = IdentifyForm(request.form)
 
     if request.method == 'POST':
         file = request.form['file']
+
+        print(form.file.data)
 
         if form.validate():
             # Save the comment here.
