@@ -5,7 +5,7 @@ from os.path import isfile, join, splitext
 from facerec import facedb, dlib_api
 from PIL import Image
 import numpy as np
-from flask import Flask, jsonify, request, flash, render_template
+from flask import Flask, jsonify, request, flash, render_template, url_for
 #from flask_cors import CORS
 from werkzeug.exceptions import BadRequest
 from wtforms import Form, FileField, validators, TextField
@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 
 app.config.from_object(__name__)
-app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176a'
+app.config['SECRET_KEY'] = '8da7a0d2-5cec-4cec-99e7-2979768dca67'
 #CORS(app)
 
 # <Picture functions> #
@@ -25,8 +25,8 @@ def load_image(fname):
 
 
 facedb.set_db_path(os.path.join(os.path.split(__file__)[0],'data'))
-dlib_api.teach_person(load_image(r"D:\Users\TOS\Pictures\Camera Roll\WIN_20180412_14_00_21_Pro.jpg"),name='Tobias Schoch')
-dlib_api.teach_person(load_image(r"D:\Users\TOS\Pictures\Camera Roll\WIN_20180412_14_00_22_Pro.jpg"),name='Tobias Schoch')
+# dlib_api.teach_person(load_image(r"D:\Users\TOS\Pictures\Camera Roll\WIN_20180412_14_00_21_Pro.jpg"),name='Tobias Schoch')
+# dlib_api.teach_person(load_image(r"D:\Users\TOS\Pictures\Camera Roll\WIN_20180412_14_00_22_Pro.jpg"),name='Tobias Schoch')
 
 def is_picture(filename):
     image_extensions = {'png', 'jpg', 'jpeg', 'gif'}
@@ -48,25 +48,23 @@ def person_to_dict(p, attributes=['id','name','nmeans','code']):
 # <Picture functions> #
 
 # <Controller>
-class ReusableForm(Form):
-    name = TextField('Name:', validators=[validators.required()])
-    email = TextField('Email:', validators=[validators.required(), validators.Length(min=6, max=35)])
-    password = TextField('Password:', validators=[validators.required(), validators.Length(min=3, max=35)])
+class IdentifyForm(Form):
+    file = TextField('File:', validators=[validators.required()])
 
 @app.route("/", methods=['GET', 'POST'])
 def web_identify():
-    form = ReusableForm(request.form)
+    form = IdentifyForm(request.form)
 
     if request.method == 'POST':
-        name = request.form['name']
+        file = request.form['file']
 
         if form.validate():
             # Save the comment here.
-            flash('Hello ' + name)
+            flash('Upload ' + file)
         else:
-            flash('All the form fields are required. ')
+            flash('Error: All the form fields are required. ')
 
-    return render_template('teach.html', form=form)
+    return render_template('identify.html', form=form)
 
 
 # @app.route('/identify', methods=['POST'])
