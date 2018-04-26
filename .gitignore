@@ -46,3 +46,6 @@ output/
 
 data/*
 !data/.gitkeep
+
+static/tmp/*
+!static/tmp/.gitkeep

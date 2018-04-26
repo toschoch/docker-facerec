@@ -42,6 +42,10 @@
         {% endfor %}
             {% endif %}
         {% endwith %}
+    {% if proc_image %}
+        <br>
+        <img src="{{ proc_image }}" alt="Processed image">
+    {% endif %}
 
 </div>
 <br>

@@ -2,20 +2,21 @@ import os
 from os import listdir
 from os.path import isfile, join, splitext
 
-import tempfile
 from facerec import facedb, dlib_api
-from PIL import Image
+from PIL import Image, ImageDraw2, ImageDraw
 import numpy as np
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from flask import Flask, jsonify, request, flash, render_template, url_for
+from flask import Flask, jsonify, request, flash, render_template, send_file
+from wtforms import TextField
 from wtforms.validators import required
 from werkzeug.exceptions import BadRequest
 from werkzeug.utils import secure_filename
 
+import uuid
+
 # Create flask app
 app = Flask(__name__)
-
 
 app.config.from_object(__name__)
 app.config['SECRET_KEY'] = '8da7a0d2-5cec-4cec-99e7-2979768dca67'
@@ -24,11 +25,11 @@ app.config['SECRET_KEY'] = '8da7a0d2-5cec-4cec-99e7-2979768dca67'
 # <Picture functions> #
 
 def load_image(fname):
-    return np.array(Image.open(fname))
+    return np.array(Image.open(fname, 'r'))
 
 
 facedb.set_db_path(os.path.join(os.path.split(__file__)[0],'data'))
-# dlib_api.teach_person(load_image(r"D:\Users\TOS\Pictures\Camera Roll\WIN_20180412_14_00_21_Pro.jpg"),name='Tobias Schoch')
+# dlib_api.teach_person(load_image("/home/Tobi/Downloads/IMG_1820-Bearbeitet.jpg"),name='Tobias Schoch')
 # dlib_api.teach_person(load_image(r"D:\Users\TOS\Pictures\Camera Roll\WIN_20180412_14_00_22_Pro.jpg"),name='Tobias Schoch')
 
 def is_picture(filename):
@@ -52,23 +53,79 @@ def person_to_dict(p, attributes=['id','name','nmeans','code']):
 
 # <Controller>
 class IdentifyForm(FlaskForm):
-    file = FileField('File:', validators=[])
+    file = FileField('File', validators=[])
+class TeachForm(FlaskForm):
+    file = FileField('File', validators=[])
+    name = TextField('Name', validators=[])
+    id = TextField('ID', validators=[])
+
 
 @app.route("/identify", methods=['GET', 'POST'])
 def web_identify():
     form = IdentifyForm(request.form)
 
-    if request.method=='POST':#form.validate_on_submit():
-         # = form.file.data
-        # filename = secure_filename(f.filename)
+    if request.method=='POST':
         if len(request.files)>0:
             file = request.files['file']
-            print(file)
-            flash('Upload ' + str(file))
+
+            if is_picture(file.filename):
+                pilimage = Image.open(file.stream, 'r')
+                faces = dlib_api.detect_and_identify_faces(np.array(pilimage))
+
+                draw = ImageDraw.Draw(pilimage)
+                for p, rect, shape in faces:
+                    draw.rectangle([(rect.left(),rect.top()),(rect.right(),rect.bottom())], outline=128)
+                    draw.text(((rect.right()-rect.left())/2+rect.left(), rect.top()-20),p.name, fill=128)
+                del draw
+
+                tmpfile = os.path.join('static/tmp','{}.jpg'.format(uuid.uuid4()))
+                with open(tmpfile, 'wb+') as fp:
+                    pilimage.save(fp, 'JPEG')
+
+                flash('found {} faces... '.format(len(faces)) + '\n'.join(("id: {}, name: {}".format(p.id, p.name) for p,_,_ in faces)))
+
+                return render_template('identify.html', form=form, proc_image=tmpfile)
+
+            else:
+                flash('Error: Only images allowed!')
         else:
             flash('Error: All the form fields are required. ')
 
     return render_template('identify.html', form=form)
+
+@app.route("/teach", methods=['GET', 'POST'])
+def web_teach():
+    form = TeachForm(request.form)
+
+    if request.method=='POST':
+        if len(request.files)>0:
+            file = request.files['file']
+
+            if is_picture(file.filename):
+                pilimage = Image.open(file.stream, 'r')
+                faces = dlib_api.teach_person(np.array(pilimage),name=form.name.data,id=form.id.data)
+                flash("")
+                #
+                # draw = ImageDraw.Draw(pilimage)
+                # for p, rect, shape in faces:
+                #     draw.rectangle([(rect.left(),rect.top()),(rect.right(),rect.bottom())], outline=128)
+                #     draw.text(((rect.right()-rect.left())/2+rect.left(), rect.top()-20),p.name, fill=128)
+                # del draw
+                #
+                # tmpfile = os.path.join('static/tmp','{}.jpg'.format(uuid.uuid4()))
+                # with open(tmpfile, 'wb+') as fp:
+                #     pilimage.save(fp, 'JPEG')
+                #
+                # flash('found {} faces... '.format(len(faces)) + '\n'.join(("id: {}, name: {}".format(p.id, p.name) for p,_,_ in faces)))
+                #
+                # return render_template('identify.html', form=form, proc_image=tmpfile)
+
+            else:
+                flash('Error: Only images allowed!')
+        else:
+            flash('Error: All the form fields are required. ')
+
+    return render_template('teach.html', form=form)
 
 
 # @app.route('/identify', methods=['POST'])

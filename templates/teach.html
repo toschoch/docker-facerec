@@ -14,14 +14,15 @@
 
 
   <h2>Teach a Person on Image</h2>
-  <form  action="" method="post" role="form">
+  <form  action="" method="post" role="form" enctype="multipart/form-data">
     {{ form.csrf }}
     <div class="form-group">
-        <label for="name">Name:</label>
-        <input type="text" class="form-control" id="name" name="name" placeholder="What's your name?">
-        <br>
-        <label for="file">Image:</label><input type="file" class="form-control" id="file" name="file" placeholder="Upload your image">
 
+        {{ form.name.label }} {{ form.name }}
+        <br>
+        {{ form.id.label }} {{ form.id }}
+        <br>
+        {{ form.file.label }} {{ form.file }}
     </div>
     <button type="submit" class="btn btn-success">Submit</button>
   </form>
