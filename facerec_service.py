@@ -6,10 +6,12 @@ import tempfile
 from facerec import facedb, dlib_api
 from PIL import Image
 import numpy as np
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
 from flask import Flask, jsonify, request, flash, render_template, url_for
-#from flask_cors import CORS
+from wtforms.validators import required
 from werkzeug.exceptions import BadRequest
-from wtforms import Form, FileField, validators, TextField
+from werkzeug.utils import secure_filename
 
 # Create flask app
 app = Flask(__name__)
@@ -49,21 +51,20 @@ def person_to_dict(p, attributes=['id','name','nmeans','code']):
 # <Picture functions> #
 
 # <Controller>
-class IdentifyForm(Form):
-    file = TextField('File:', validators=[validators.required()])
+class IdentifyForm(FlaskForm):
+    file = FileField('File:', validators=[])
 
 @app.route("/identify", methods=['GET', 'POST'])
 def web_identify():
     form = IdentifyForm(request.form)
 
-    if request.method == 'POST':
-        file = request.form['file']
-
-        print(form.file.data)
-
-        if form.validate():
-            # Save the comment here.
-            flash('Upload ' + file)
+    if request.method=='POST':#form.validate_on_submit():
+         # = form.file.data
+        # filename = secure_filename(f.filename)
+        if len(request.files)>0:
+            file = request.files['file']
+            print(file)
+            flash('Upload ' + str(file))
         else:
             flash('Error: All the form fields are required. ')
 
