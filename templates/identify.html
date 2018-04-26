@@ -18,7 +18,9 @@
 
     {{ form.csrf_token }}
     <div class="form-group">
-        {{ form.file.label }} {{ form.file }}
+
+        <label for="file">Image:</label>
+        <input type="file" class="form-control" id="file" name="file" placeholder="Upload your image...">
     </div>
     <button type="submit" class="btn btn-success" value="Go">Submit</button>
   </form>

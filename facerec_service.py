@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw2, ImageDraw
 import numpy as np
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from flask import Flask, jsonify, request, flash, render_template, send_file
+from flask import Flask, jsonify, request, flash, render_template, redirect, url_for
 from wtforms import TextField
 from wtforms.validators import required
 from werkzeug.exceptions import BadRequest
@@ -52,6 +52,23 @@ def person_to_dict(p, attributes=['id','name','nmeans','code']):
 # <Picture functions> #
 
 # <Controller>
+
+@app.route('/teach')
+def image_identify():
+    pass
+
+@app.route('/identify')
+def image_identify():
+    pass
+
+@app.route('/facecode/teach')
+def code_identify():
+    pass
+
+@app.route('/facecode/identify')
+def code_identify():
+    pass
+
 class IdentifyForm(FlaskForm):
     file = FileField('File', validators=[])
 class TeachForm(FlaskForm):
@@ -59,8 +76,8 @@ class TeachForm(FlaskForm):
     name = TextField('Name', validators=[])
     id = TextField('ID', validators=[])
 
-
-@app.route("/identify", methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
+@app.route("/web/identify", methods=['GET', 'POST'])
 def web_identify():
     form = IdentifyForm(request.form)
 
@@ -69,7 +86,7 @@ def web_identify():
             file = request.files['file']
 
             if is_picture(file.filename):
-                pilimage = Image.open(file.stream, 'r')
+                pilimage = Image.open(file.stream, 'r').convert('RGB')
                 faces = dlib_api.detect_and_identify_faces(np.array(pilimage))
 
                 draw = ImageDraw.Draw(pilimage)
@@ -93,7 +110,7 @@ def web_identify():
 
     return render_template('identify.html', form=form)
 
-@app.route("/teach", methods=['GET', 'POST'])
+@app.route("/web/teach", methods=['GET', 'POST'])
 def web_teach():
     form = TeachForm(request.form)
 

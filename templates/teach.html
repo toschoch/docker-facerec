@@ -15,14 +15,16 @@
 
   <h2>Teach a Person on Image</h2>
   <form  action="" method="post" role="form" enctype="multipart/form-data">
-    {{ form.csrf }}
+    {{ form.csrf_token }}
     <div class="form-group">
-
-        {{ form.name.label }} {{ form.name }}
+        <label for="name">Name:</label>
+        <input type="name" class="form-control" id="name" name="name" placeholder="Name of the person on the image...">
         <br>
-        {{ form.id.label }} {{ form.id }}
+        <label for="id">id:</label>
+        <input type="id" class="form-control" id="id" name="id" placeholder="ID of the person on the image... (optional)">
         <br>
-        {{ form.file.label }} {{ form.file }}
+        <label for="file">Image:</label>
+        <input type="file" class="form-control" id="file" name="file" placeholder="Upload your image...">
     </div>
     <button type="submit" class="btn btn-success">Submit</button>
   </form>
