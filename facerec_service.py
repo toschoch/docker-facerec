@@ -13,6 +13,8 @@ from wtforms.validators import required
 from werkzeug.exceptions import BadRequest
 from werkzeug.utils import secure_filename
 
+import utils
+
 import uuid
 
 # Create flask app
@@ -53,11 +55,11 @@ def person_to_dict(p, attributes=['id','name','nmeans','code']):
 
 # <Controller>
 
-@app.route('/teach')
+@app.route('/image/teach')
 def image_teach():
     pass
 
-@app.route('/identify')
+@app.route('/image/identify')
 def image_identify():
     pass
 
@@ -77,7 +79,7 @@ class TeachForm(FlaskForm):
     id = TextField('ID', validators=[])
 
 @app.route('/', methods=['GET', 'POST'])
-@app.route("/web/identify", methods=['GET', 'POST'])
+@app.route('/identify', methods=['GET', 'POST'])
 def web_identify():
     form = IdentifyForm(request.form)
 
@@ -88,42 +90,26 @@ def web_identify():
             if is_picture(file.filename):
                 pilimage = Image.open(file.stream, 'r').convert('RGB')
                 faces = dlib_api.detect_and_identify_faces(np.array(pilimage))
-
-                fontsize = 1  # starting font size
-
-                # portion of image width you want text width to be
-                img_fraction = 0.05
-
-                font = ImageFont.truetype("static/Ubuntu-Regular.ttf", fontsize)
-                while font.getsize("Test")[0] < img_fraction * pilimage.size[0]:
-                    # iterate until the text size is just larger than the criteria
-                    fontsize += 1
-                    font = ImageFont.truetype("static/Ubuntu-Regular.ttf", fontsize)
-
-                # optionally de-increment to be sure it is less than criteria
-                fontsize -= 1
-                font = ImageFont.truetype("static/Ubuntu-Regular.ttf", fontsize)
+                font = utils.get_font(1024)
 
                 draw = ImageDraw.Draw(pilimage)
                 for p, rect, shape in faces:
                     s = font.getsize(p.name)
-                    draw.rectangle([(rect.left(),rect.top()),(rect.right(),rect.bottom())], outline=128)
+                    utils.draw_rectangle(draw, rect, 5, color=128)
                     draw.text(((rect.right()-rect.left())/2+rect.left()-int(s[0]/2), rect.top()-s[1]-20),p.name, fill=128, font=font)
                 del draw
 
                 tmpfile = os.path.join('static/tmp','{}.jpg'.format(uuid.uuid4()))
 
                 # resize
-                basewidth = 1024
-                wpercent = (basewidth / float(pilimage.size[0]))
-                hsize = int((float(pilimage.size[1]) * float(wpercent)))
-                pilimage = pilimage.resize((basewidth, hsize), Image.ANTIALIAS)
+                pilimage = utils.resize_image(pilimage, 1024)
 
 
                 with open(tmpfile, 'wb+') as fp:
                     pilimage.save(fp, 'JPEG')
 
-                flash('found {} faces... '.format(len(faces)) + '\n'.join(("id: {}, name: {}".format(p.id, p.name) for p,_,_ in faces)))
+                flash('found {} faces... '.format(len(faces)) +
+                      '\n'.join(("id: {}, name: {}".format(p.id, p.name) for p,_,_ in faces)))
 
                 return render_template('identify.html', form=form, proc_image=tmpfile)
 
@@ -134,7 +120,7 @@ def web_identify():
 
     return render_template('identify.html', form=form)
 
-@app.route("/web/teach", methods=['GET', 'POST'])
+@app.route("/teach", methods=['GET', 'POST'])
 def web_teach():
     form = TeachForm(request.form)
 
@@ -144,22 +130,11 @@ def web_teach():
 
             if is_picture(file.filename):
                 pilimage = Image.open(file.stream, 'r')
-                faces = dlib_api.teach_person(np.array(pilimage),name=form.name.data,id=form.id.data)
-                flash("")
-                #
-                # draw = ImageDraw.Draw(pilimage)
-                # for p, rect, shape in faces:
-                #     draw.rectangle([(rect.left(),rect.top()),(rect.right(),rect.bottom())], outline=128)
-                #     draw.text(((rect.right()-rect.left())/2+rect.left(), rect.top()-20),p.name, fill=128)
-                # del draw
-                #
-                # tmpfile = os.path.join('static/tmp','{}.jpg'.format(uuid.uuid4()))
-                # with open(tmpfile, 'wb+') as fp:
-                #     pilimage.save(fp, 'JPEG')
-                #
-                # flash('found {} faces... '.format(len(faces)) + '\n'.join(("id: {}, name: {}".format(p.id, p.name) for p,_,_ in faces)))
-                #
-                # return render_template('identify.html', form=form, proc_image=tmpfile)
+                try:
+                    faces = dlib_api.teach_person(np.array(pilimage),name=form.name.data,id=form.id.data)
+                    flash("Tought this face!")
+                except Exception as e:
+                    flash("Error: {}".format(e))
 
             else:
                 flash('Error: Only images allowed!')

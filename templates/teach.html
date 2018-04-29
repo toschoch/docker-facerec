@@ -36,7 +36,7 @@
         {% for message in messages %}
             {% if "Error" not in message[1]: %}
                 <div class="alert alert-info">
-                <strong>Success! </strong> {{ message[1] }}
+                <strong>Success! </strong> {{ message[1] }}<br>Now you can identify this person on images <a href=/identify>here</a>
                 </div>
             {% endif %}
 
