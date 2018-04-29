@@ -3,7 +3,7 @@ from os import listdir
 from os.path import isfile, join, splitext
 
 from facerec import facedb, dlib_api
-from PIL import Image, ImageDraw2, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
@@ -54,7 +54,7 @@ def person_to_dict(p, attributes=['id','name','nmeans','code']):
 # <Controller>
 
 @app.route('/teach')
-def image_identify():
+def image_teach():
     pass
 
 @app.route('/identify')
@@ -62,7 +62,7 @@ def image_identify():
     pass
 
 @app.route('/facecode/teach')
-def code_identify():
+def code_teach():
     pass
 
 @app.route('/facecode/identify')
@@ -89,13 +89,37 @@ def web_identify():
                 pilimage = Image.open(file.stream, 'r').convert('RGB')
                 faces = dlib_api.detect_and_identify_faces(np.array(pilimage))
 
+                fontsize = 1  # starting font size
+
+                # portion of image width you want text width to be
+                img_fraction = 0.05
+
+                font = ImageFont.truetype("static/Ubuntu-Regular.ttf", fontsize)
+                while font.getsize("Test")[0] < img_fraction * pilimage.size[0]:
+                    # iterate until the text size is just larger than the criteria
+                    fontsize += 1
+                    font = ImageFont.truetype("static/Ubuntu-Regular.ttf", fontsize)
+
+                # optionally de-increment to be sure it is less than criteria
+                fontsize -= 1
+                font = ImageFont.truetype("static/Ubuntu-Regular.ttf", fontsize)
+
                 draw = ImageDraw.Draw(pilimage)
                 for p, rect, shape in faces:
+                    s = font.getsize(p.name)
                     draw.rectangle([(rect.left(),rect.top()),(rect.right(),rect.bottom())], outline=128)
-                    draw.text(((rect.right()-rect.left())/2+rect.left(), rect.top()-20),p.name, fill=128)
+                    draw.text(((rect.right()-rect.left())/2+rect.left()-int(s[0]/2), rect.top()-s[1]-20),p.name, fill=128, font=font)
                 del draw
 
                 tmpfile = os.path.join('static/tmp','{}.jpg'.format(uuid.uuid4()))
+
+                # resize
+                basewidth = 1024
+                wpercent = (basewidth / float(pilimage.size[0]))
+                hsize = int((float(pilimage.size[1]) * float(wpercent)))
+                pilimage = pilimage.resize((basewidth, hsize), Image.ANTIALIAS)
+
+
                 with open(tmpfile, 'wb+') as fp:
                     pilimage.save(fp, 'JPEG')
 
