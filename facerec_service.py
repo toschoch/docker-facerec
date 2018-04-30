@@ -57,11 +57,11 @@ def create_app():
     @app.route('/faces', methods=['GET', 'DELETE'])
     def faces():
         # GET
+        session = facedb.Session()
         if request.method == 'GET':
-            return jsonify(list(map(lambda p: {'person':utils.person_to_dict(p)},facedb.persons())))
+            return jsonify(list(map(lambda p: {'person':utils.person_to_dict(p)},facedb.persons(session))))
         elif request.method == 'DELETE':
             name, id = utils.extract_name_or_id(request)
-            session = facedb.Session()
             person = facedb.get_person(name=name, id=id, session=session)
             session.delete(person)
             session.commit()
@@ -167,6 +167,8 @@ if __name__ == "__main__":
     datapath = os.path.join(os.path.split(__file__)[0], 'data')
     os.makedirs(datapath, exist_ok=True)
     facedb.set_db_path(datapath, persistent=True)
+    logging.info("facedb database: {} containes {} persons...".format(facedb.get_db_file().absolute(),
+                                                                      len(facedb.persons())))
 
     # Start app
     print("Starting WebServer...")

@@ -31,9 +31,9 @@ RUN find pypkg/ -type f -exec pip3 install {} \; \
 RUN apk add libstdc++ libjpeg libpng freetype
 
 # Copy web service script
-ADD *.py /
+COPY *.py /
 RUN mkdir /static/ && mkdir /static/tmp
-ADD templates/ /templates/
+COPY templates/ /templates/
 COPY templates/*.html /templates/
 COPY static/bootstrap* /static/
 COPY static/*.ttf /static
