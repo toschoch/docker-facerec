@@ -1,57 +1,30 @@
-FROM python:3.4-slim
+FROM alpine:latest
 
-RUN apt-get -y update && \
-    apt-get install -y --fix-missing \
-    build-essential \
-    cmake \
-    gfortran \
-    git \
-    wget \
-    curl \
-    graphicsmagick \
-    libgraphicsmagick1-dev \
-    libatlas-dev \
-    libavcodec-dev \
-    libavformat-dev \
-    libboost-all-dev \
-    libgtk2.0-dev \
-    libjpeg-dev \
-    liblapack-dev \
-    libswscale-dev \
-    pkg-config \
-    python3-dev \
-    python3-numpy \
-    software-properties-common \
-    zip \
-    && apt-get clean && rm -rf /tmp/* /var/tmp/*
+# RUN apk add --update --no-cache bash ca-certificates && update-ca-certificates
+RUN apk add --update --no-cache bash ca-certificates python3 \
+    && python3 -m ensurepip \
+    && rm -r /usr/lib/python*/ensurepip \
+    && pip3 install --upgrade pip setuptools \
+    && update-ca-certificates \
+    && rm -r /root/.cache
 
+RUN python3 -m pip install --upgrade pip
 
-# Install DLIB
-RUN cd ~ && \
-    mkdir -p dlib && \
-    git clone -b 'v19.7' --single-branch https://github.com/davisking/dlib.git dlib/ && \
-    cd  dlib/ && \
-    python3 setup.py install --yes USE_AVX_INSTRUCTIONS
+RUN apk add --no-cache --virtual .build-deps build-base gcc abuild binutils binutils-doc gcc-doc python3-dev
+RUN apk add cmake cmake-doc
 
-
-# Install Flask
-RUN cd ~ && \
-    pip3 install flask flask-cors
-
-
-# Install Face-Recognition Python Library
-RUN cd ~ && \
-    mkdir -p face_recognition && \
-    git clone https://github.com/ageitgey/face_recognition.git face_recognition/ && \
-    cd face_recognition/ && \
-    pip3 install -r requirements.txt && \
-    python3 setup.py install
+RUN pip install dlib \
+    && apk del .build-deps \
+    && rm -r /root/.cache
 
 
 # Copy web service script
-COPY facerec_service.py /root/facerec_service.py
+ADD *.py /
+ADD requirements.txt /
+
+# Install
+RUN pip3 install -r requirements.txt
 
 
 # Start the web service
-CMD cd /root/ && \
-    python3 facerec_service.py
+ENTRYPOINT ['python3','facerec_service.py']
