@@ -10,6 +10,25 @@ A small web service running in a docker container that enables face recognition 
 
 Change-Log
 ----------
+##### 0.0.2
+* show number of stored faces at startup
+* persistent data base configuration
+* added tests for flask service
+* working docker file for facerec server
+* add working python-facerec
+* added the service api for code and image requests
+* added docker frame and package
+* rerouted and nice rectangle and fontsize
+* added image scaling and font size
+* improved form, added routes
+* basic teach and identify over web
+* some small changes
+* working upload
+* adapted identify page
+* added data directory
+* update readme
+* initial service draft
+
 ##### 0.0.1
 * initial version
 
