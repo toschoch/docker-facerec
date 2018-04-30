@@ -14,25 +14,31 @@ Change-Log
 * initial version
 
 
-Installation / Usage
---------------------
-
-To install use pip:
-
-    pip install https://github.com/toschoch/docker-facerec.git
-
-
-Or clone the repo:
-
-    git clone https://github.com/toschoch/docker-facerec.git
-    python setup.py install
-    
-Contributing
+Installation
 ------------
 
-TBD
+#### Docker-Container
+```
+docker run -v data:/data -p 8081:80  --name facerec-server shocki/facerec
+```
+Faces database is stored in /data. The web services are exposed on port 80.
 
-Example
--------
+#### Local Server
+To install use pip:
 
-TBD
+    git clone https://github.com/toschoch/docker-facerec.git
+    pip install -r docker-facerec/requirement.txt
+    python facerec_service.py
+
+Usage
+-----
+
+Webinterface with browser on port 80.
+
+REST-API:
+
+faces
+image/indentify
+image/teach
+facecode/identify
+facecode/teach

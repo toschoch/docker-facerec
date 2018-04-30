@@ -1,14 +1,29 @@
 
-from werkzeug.exceptions import BadRequest
 from PIL import Image, ImageFont
 import base64
 import numpy as np
+from io import BytesIO
+
+class BadRequest(Exception):
+    status_code = 400
+
+    def __init__(self, message, status_code=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        return rv
 
 def rect_to_dict(rect):
-    return {side: getattr(rect,side) for side in ['left','right','top','bottom']}
+    return {side: getattr(rect,side)() for side in ['left','right','top','bottom']}
 
 def person_to_dict(p, attributes=['id','name','nmeans','code']):
-    return dict(zip(attributes,[str(getattr(p, a)) if a!='code' else str(getattr(p, a).tolist()) for a in attributes]))
+    return dict(zip(attributes,[str(getattr(p, a)) if a!='code' else base64.b64encode(getattr(p, a).tobytes()).decode('ascii') for a in attributes]))
 
 def face_to_dict(face):
     p, rect, shape = face
@@ -51,28 +66,27 @@ def draw_rectangle(draw, rect, width, color):
 
 def extract_image(request):
     # Check if a valid image file was uploaded
-    if 'file' not in request.files:
+    if 'image' not in request.json:
         raise BadRequest("Missing file parameter!")
 
-    file = request.files['file']
-    if file.filename == '':
-        raise BadRequest("Given file is invalid")
+    image = request.json['image'].encode('ascii')
 
-    return file
+    image = Image.open(BytesIO(base64.b64decode(image)))
+
+    return image
 
 
 def extract_facecode(request):
-    if 'code' not in request.args:
+    if 'code' not in request.json:
         raise BadRequest("Missing code parameter!")
-    code = np.frombuffer(base64.b64decode(request.args['code']))
+    code = np.frombuffer(base64.b64decode(request.json['code']))
     if len(code.shape) != 1 or code.shape[0] != 128:
         raise BadRequest("Bad code parameter!")
     return code
 
-
 def extract_name_or_id(request):
-    name = request.args.get('name',None)
-    id = request.args.get('id',None)
+    name = request.json.get('name',None)
+    id = request.json.get('id',None)
     if name is None and id is None:
         raise BadRequest("either ID or NAME must be specified!")
     return name, id
