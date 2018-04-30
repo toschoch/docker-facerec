@@ -166,7 +166,7 @@ if __name__ == "__main__":
     # set database path to data dir
     datapath = os.path.join(os.path.split(__file__)[0], 'data')
     os.makedirs(datapath, exist_ok=True)
-    facedb.set_db_path(datapath)
+    facedb.set_db_path(datapath, persistent=True)
 
     # Start app
     print("Starting WebServer...")
