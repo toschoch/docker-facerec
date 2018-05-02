@@ -49,3 +49,7 @@ data/*
 
 static/tmp/*
 !static/tmp/.gitkeep
+
+
+tests/data/*
+!tests/data/.gitkeep
