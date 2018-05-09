@@ -103,11 +103,37 @@ class FaceNames(FaceIds):
         return self._patch(p, session, msg)
 
 
+parser_float= reqparse.RequestParser(bundle_errors=True)
+parser_float.add_argument('value', type=float, help="threshold must be a float value", required=True)
+
+class Config(Resource):
+    def get(self):
+        return {'threshold': facedb.get_distance_threshold()}
+
+class Configs(Resource):
+
+    def get(self, parameter):
+        if parameter == 'threshold':
+            return facedb.get_distance_threshold()
+        # elif
+        abort(404, message="No configuration parameter '{}' found".format(parameter))
+
+    def patch(self, parameter):
+        if parameter == 'threshold':
+            args = parser_float.parse_args()
+            facedb.set_distance_threshold(args['value'])
+            return facedb.get_distance_threshold()
+        # elif
+        abort(404, message="No configuration parameter '{}' found".format(parameter))
+
+
 def create_app():
 
     app = Flask(__name__)
     api = Api(app)
 
+    api.add_resource(Config, '/config')
+    api.add_resource(Configs, '/config/<string:parameter>')
 
     api.add_resource(Faces, '/faces')
     api.add_resource(FaceIds, '/faces/<int:face_id>')
