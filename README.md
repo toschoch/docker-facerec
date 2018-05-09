@@ -11,6 +11,7 @@ A small web service running in a docker container that enables face recognition 
 Change-Log
 ----------
 ##### 0.1.1
+* changed to python-facerec v0.1.0
 * fixed config persistency
 * added usage documentation
 * exposed configuration /config/ (threshold parameter)
