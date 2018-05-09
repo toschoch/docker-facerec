@@ -27,3 +27,7 @@ def test_threshold(client):
     r = client.get('config/threshold')
     assert r.status_code == 200
     assert r.json == 0.61
+
+    r = client.patch('config/threshold', data={'value': 0.6})
+    assert r.status_code == 200
+    assert r.json == 0.6

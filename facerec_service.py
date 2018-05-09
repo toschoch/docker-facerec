@@ -121,7 +121,7 @@ class Configs(Resource):
     def patch(self, parameter):
         if parameter == 'threshold':
             args = parser_float.parse_args()
-            facedb.set_distance_threshold(args['value'])
+            facedb.set_distance_threshold(args['value'], persistent=True)
             return facedb.get_distance_threshold()
         # elif
         abort(404, message="No configuration parameter '{}' found".format(parameter))
