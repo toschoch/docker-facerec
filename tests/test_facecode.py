@@ -52,3 +52,19 @@ def test_teach(client):
 
     r = client.get('faces')
     assert len(r.json)==1
+
+    r = client.get('faces/1')
+    assert r.json['code']==payload['code']
+    assert r.json['name']==payload['name']
+
+    r = client.patch('faces/1', data={'name':'Donald Duck'})
+    r = client.get('faces/1')
+    assert r.json['code'] == payload['code']
+    assert r.json['name'] == 'Donald Duck'
+
+    # delete face
+    r = client.get('faces')
+    assert len(r.json) == 1
+    r = client.delete('faces/1')
+    r = client.get('faces')
+    assert len(r.json) == 0

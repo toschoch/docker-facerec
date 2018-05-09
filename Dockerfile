@@ -1,6 +1,7 @@
 FROM alpine:latest
 
-COPY packages/python-facerec* /pypkg/
+#COPY packages/*.gz /pypkg/
+#COPY packages/*.whl /pypkg/
 ADD requirements.txt /
 
 # RUN apk add --update --no-cache bash ca-certificates && update-ca-certificates
@@ -14,6 +15,7 @@ RUN apk add --update --no-cache bash ca-certificates python3 \
     && apk add --no-cache --virtual .build-deps \
                        build-base \
                        gcc \
+                       git \
                        python3-dev \
                        cmake \
                        jpeg-dev \
@@ -22,23 +24,24 @@ RUN apk add --update --no-cache bash ca-certificates python3 \
 
 COPY packages/fortify-headers.h /usr/include/fortify/
 
-RUN find pypkg/ -type f -exec pip3 install {} \; \
+RUN pip3 install -e git+https://github.com/toschoch/python-facerec.git@v0.0.3#egg=python-facerec \
     && pip3 install -r requirements.txt \
     && apk del .build-deps \
-    && rm -r /root/.cache \
-    && rm -r /pypkg
+    && rm -r /root/.cache
 
 RUN apk add libstdc++ libjpeg libpng freetype
 
 # Copy web service script
 COPY *.py /
-RUN mkdir /static/ && mkdir /static/tmp
+RUN mkdir /static/ && mkdir /static/tmp && mkdir /data
 COPY templates/ /templates/
 COPY templates/*.html /templates/
 COPY static/bootstrap* /static/
 COPY static/*.ttf /static
 
+
 EXPOSE 80
+VOLUME /data
 
 # Start the web service
 CMD python3 facerec_service.py

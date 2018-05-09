@@ -5,26 +5,118 @@ from PIL import Image, ImageDraw
 import numpy as np
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField
+
 from flask import Flask, jsonify, request, flash, render_template, redirect, url_for
+from flask_restful import reqparse, abort, Api, Resource
 from wtforms import TextField
 
-import json
 
 import utils
 
 import uuid
 
-# Create flask app
+# RESTful API
+parser = reqparse.RequestParser(bundle_errors=True)
+parser.add_argument('name', type=str, help="name must be a string", required=True)
+
+
+# shows a list of all todos, and lets you POST to add new tasks
+class Faces(Resource):
+    def get(self):
+        session = facedb.Session()
+        faces = list(map(lambda p: {'person': utils.person_to_dict(p)}, facedb.persons(session)))
+        session.close()
+        return faces
+
+class FaceIds(Resource):
+
+    def _get_person_for_id(self, face_id):
+        session = facedb.Session()
+        return session.query(facedb.Person).filter(facedb.Person.id == face_id).first(), session
+
+    def _get(self, p, session, msg):
+        try:
+            person = utils.person_to_dict(p)
+        except AttributeError:
+            abort(404, message=msg)
+        finally:
+            session.close()
+        return person
+
+    def _delete(self, p, session, msg):
+        try:
+            person = utils.person_to_dict(p)
+            session.delete(p)
+            session.commit()
+        except AttributeError:
+            abort(404, message=msg)
+        finally:
+            session.close()
+        return
+
+    def _patch(self, p, session, msg):
+        args = parser.parse_args()
+        try:
+            p.name = args['name']
+            session.commit()
+            person = utils.person_to_dict(p)
+        except AttributeError:
+            abort(404, message=msg)
+        finally:
+            session.close()
+        return person
+
+    def get(self, face_id):
+        p, session = self._get_person_for_id(face_id)
+        msg = "Face with id '{}' doesn't exist".format(face_id)
+        return self._get(p, session, msg)
+
+    def delete(self, face_id):
+        p, session = self._get_person_for_id(face_id)
+        msg = "Face with id '{}' doesn't exist".format(face_id)
+        return self._delete(p, session, msg)
+
+    def patch(self, face_id):
+        p, session = self._get_person_for_id(face_id)
+        msg = "Face with id '{}' doesn't exist".format(face_id)
+        return self._patch(p, session, msg)
+
+class FaceNames(FaceIds):
+
+    def _get_person_for_name(self, name):
+        session = facedb.Session()
+        return session.query(facedb.Person).filter(facedb.Person.name == name).first(), session
+
+    def get(self, name):
+        p, session = self._get_person_for_name(name)
+        msg = "Face with name '{}' doesn't exist".format(name)
+        return self._get(p, session, msg)
+
+    def get(self, name):
+        p, session = self._get_person_for_name(name)
+        msg = "Face with name '{}' doesn't exist".format(name)
+        return self._delete(p, session, msg)
+
+    def patch(self, name):
+        p, session = self._get_person_for_name(name)
+        msg = "Face with name '{}' doesn't exist".format(name)
+        return self._patch(p, session, msg)
 
 
 def create_app():
+
     app = Flask(__name__)
+    api = Api(app)
+
+
+    api.add_resource(Faces, '/faces')
+    api.add_resource(FaceIds, '/faces/<int:face_id>')
+    api.add_resource(FaceNames, '/faces/<string:name>')
 
     app.config.from_object(__name__)
     app.config['SECRET_KEY'] = '8da7a0d2-5cec-4cec-99e7-2979768dca67'
 
     # <Controller>
-
     @app.route('/image/teach', methods=['POST'])
     def image_teach():
         image = utils.extract_image(request)
@@ -53,19 +145,6 @@ def create_app():
         code = utils.extract_facecode(request)
         p = facedb.identify_person(code)
         return jsonify(utils.person_to_dict(p))
-
-    @app.route('/faces', methods=['GET', 'DELETE'])
-    def faces():
-        # GET
-        session = facedb.Session()
-        if request.method == 'GET':
-            return jsonify(list(map(lambda p: {'person':utils.person_to_dict(p)},facedb.persons(session))))
-        elif request.method == 'DELETE':
-            name, id = utils.extract_name_or_id(request)
-            person = facedb.get_person(name=name, id=id, session=session)
-            session.delete(person)
-            session.commit()
-            return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
         # Web App
     class IdentifyForm(FlaskForm):
@@ -160,6 +239,7 @@ def create_app():
     return app
 
 if __name__ == "__main__":
+
     import logging
     logging.basicConfig(level=logging.INFO)
 
