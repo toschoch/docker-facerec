@@ -24,7 +24,7 @@ RUN apk add --update --no-cache bash ca-certificates python3 \
 
 COPY packages/fortify-headers.h /usr/include/fortify/
 
-RUN pip3 install -e git+https://github.com/toschoch/python-facerec.git@v0.0.3#egg=python-facerec \
+RUN pip3 install -e git+https://github.com/toschoch/python-facerec.git@v0.1.0#egg=python-facerec \
     && pip3 install -r requirements.txt \
     && apk del .build-deps \
     && rm -r /root/.cache

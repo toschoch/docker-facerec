@@ -1,3 +1,4 @@
+python-facerec==0.1.0
 pillow
 flask
 flask-wtf
