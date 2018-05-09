@@ -58,10 +58,16 @@ Usage
 
 Webinterface with browser on port 80.
 
-REST-API:
+REST-API Endpoints:
 
-faces
-image/indentify
-image/teach
-facecode/identify
-facecode/teach
+* `/faces` (GET) list of faces
+* `/faces/<id or name>` (GET, PATCH, DELETE) get, modify or delete face entry
+* `/config` (GET, PATCH) get or modify configuration parameters
+* `/image/indentify` (POST) post an image and identify persons on it
+* `/image/teach` (POST) post an image and a name to teach the system a face
+* `/facecode/identify` (POST) post a facecode and identify persons on it
+* `/facecode/teach` (POST) post a facecode and a name to teach the system a face
+
+Web-API Endpoints:
+* `/`, `/identify` browser interface for identification
+* `/teach` browser interface for teaching
