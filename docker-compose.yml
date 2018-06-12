@@ -1,0 +1,17 @@
+version: '3.0'
+
+services:
+
+    facerec:
+        image: shocki/facerec
+        container_name: facerec
+        restart: unless-stopped
+        ports:
+          - 3080:80
+        volumes:
+          - ${FACEREC_DATA}:/data
+#        deploy:
+#          placement:
+#            constraints:
+#              - node.role == manager
+
