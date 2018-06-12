@@ -53,3 +53,5 @@ static/tmp/*
 
 tests/data/*
 !tests/data/.gitkeep
+
+.env
