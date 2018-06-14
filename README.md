@@ -10,6 +10,13 @@ A small web service running in a docker container that enables face recognition 
 
 Change-Log
 ----------
+##### 0.1.5
+* changed to nas paths
+* changed to facerec==0.1.5
+* changed to service, working on windows
+* add .env to gitignore
+* added a compose for the service
+
 ##### 0.1.1
 * changed to python-facerec v0.1.0
 * fixed config persistency
