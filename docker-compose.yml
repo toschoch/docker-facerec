@@ -2,16 +2,20 @@ version: '3.0'
 
 services:
 
-    facerec:
+    main:
+        build: .
         image: shocki/facerec
         container_name: facerec
         restart: unless-stopped
         ports:
-          - 3080:80
+          - 8081:80
         volumes:
-          - ${FACEREC_DATA}:/data
-#        deploy:
+          - D:\Users\TOS\docker\docker-facerec\data:/data
+        deploy:
+          replicas: 1
+          restart_policy:
+            max_attempts: 3
+            window: 120s
 #          placement:
 #            constraints:
 #              - node.role == manager
-
