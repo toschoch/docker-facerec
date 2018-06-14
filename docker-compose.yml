@@ -10,12 +10,13 @@ services:
         ports:
           - 8081:80
         volumes:
-          - D:\Users\TOS\docker\docker-facerec\data:/data
+          #- D:\Users\TOS\docker\docker-facerec\data:/data
+          - volume1/docker/facerec:/data
         deploy:
           replicas: 1
           restart_policy:
             max_attempts: 3
             window: 120s
-#          placement:
-#            constraints:
-#              - node.role == manager
+          placement:
+            constraints:
+              - node.role == manager
