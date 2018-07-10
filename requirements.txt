@@ -1,4 +1,5 @@
 facerec
+dlib==19.10.0
 pillow
 flask
 flask-wtf

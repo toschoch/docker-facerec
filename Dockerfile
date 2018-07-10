@@ -1,18 +1,18 @@
-FROM alpine:latest
+FROM alpine:latest as base
 
-#COPY packages/*.gz /pypkg/
-#COPY packages/*.whl /pypkg/
+FROM base as builder
 ADD requirements.txt /
 
 # RUN apk add --update --no-cache bash ca-certificates && update-ca-certificates
 RUN apk add --update --no-cache bash ca-certificates python3 \
     && python3 -m ensurepip \
     && rm -r /usr/lib/python*/ensurepip \
-    && pip3 install --upgrade pip setuptools \
+    && pip3 install --upgrade pip setuptools wheel\
     && update-ca-certificates \
-    && rm -r /root/.cache \
-    && python3 -m pip install --upgrade pip \
-    && apk add --no-cache --virtual .build-deps \
+    && rm -r /root/.cache
+
+RUN python3 -m pip install --upgrade pip
+RUN apk add --no-cache --virtual .build-deps \
                        build-base \
                        gcc \
                        git \
@@ -24,12 +24,20 @@ RUN apk add --update --no-cache bash ca-certificates python3 \
 
 COPY packages/fortify-headers.h /usr/include/fortify/
 
-RUN pip3 install -e git+https://github.com/toschoch/python-facerec.git@v0.1.5#egg=facerec \
-    && pip3 install -r requirements.txt \
-    && apk del .build-deps \
-    && rm -r /root/.cache
+RUN pip3 wheel --wheel-dir=/local/wheels --index-url=http://dietzi.ddns.net:3141/dietzi/stable --trusted-host=dietzi.ddns.net -r requirements.txt
 
-RUN apk add libstdc++ libjpeg libpng freetype
+FROM base
+
+COPY --from=builder /local/wheels /local/wheels
+ADD requirements.txt /
+
+RUN apk add --update --no-cache bash ca-certificates python3 libstdc++ libjpeg libpng freetype\
+    && python3 -m ensurepip \
+    && rm -r /usr/lib/python*/ensurepip \
+    && pip3 install --no-cache --upgrade pip \
+    && pip3 install --no-index --find-links=/local/wheels facerec \
+    && pip3 install --no-index --find-links=/local/wheels -r requirements.txt \
+    && rm -r /local/wheels
 
 # Copy web service script
 COPY *.py /
